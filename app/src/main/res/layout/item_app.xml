@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/_app_container"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <com.makeramen.roundedimageview.RoundedImageView
+        android:id="@+id/_app_icon"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.64"
+        app:layout_constraintDimensionRatio="1:1"
+        android:background="@drawable/bg_icon_ios"
+        android:scaleType="center"
+
+        app:riv_corner_radius="@dimen/_10sdp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/_app_label"
+        app:layout_constraintVertical_chainStyle="packed"/>
+
+    <TextView
+        android:id="@+id/_app_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintWidth_percent="0.8"
+        android:text="Example"
+        android:gravity="center"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:maxLines="1"
+        android:ellipsize="end"
+
+        app:layout_constraintStart_toStartOf="@id/_app_icon"
+        app:layout_constraintEnd_toEndOf="@id/_app_icon"
+        app:layout_constraintTop_toBottomOf="@id/_app_icon"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
