@@ -30,6 +30,7 @@ class AppFragment(var listItem : ArrayList<Item>) : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initView()
+
     }
 
     private fun initView() {

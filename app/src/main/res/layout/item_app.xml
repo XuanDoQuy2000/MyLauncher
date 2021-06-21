@@ -6,6 +6,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
+    <View
+        android:id="@+id/_container_icon"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintWidth_percent="0.76"
+        android:background="@drawable/bg_container_icon"
+        android:visibility="invisible"
+
+        app:layout_constraintTop_toTopOf="@id/_app_icon"
+        app:layout_constraintStart_toStartOf="@id/_app_icon"
+        app:layout_constraintEnd_toEndOf="@id/_app_icon"
+        app:layout_constraintBottom_toBottomOf="@id/_app_icon"
+
+        />
+
     <com.makeramen.roundedimageview.RoundedImageView
         android:id="@+id/_app_icon"
         android:layout_width="0dp"

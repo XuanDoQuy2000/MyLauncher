@@ -18,6 +18,7 @@ import com.xuandq.mylauncher.adapter.AppAdapter
 import com.xuandq.mylauncher.adapter.HomePagerAdapter
 import com.xuandq.mylauncher.fragment.AppFragment
 import com.xuandq.mylauncher.model.Item
+import com.xuandq.mylauncher.utils.DragListener
 import com.xuandq.mylauncher.utils.Tool
 import com.xuandq.mylauncher.viewmodel.AppViewModel
 import kotlinx.android.synthetic.main.activity_main.*
@@ -44,8 +45,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initView() {
+
+        val wallpaperManager = WallpaperManager.getInstance(this)
+        val wallpaperDrawable = wallpaperManager.drawable
+        home_background.setImageDrawable(wallpaperDrawable)
+
         initViewPager()
         initDock()
+
+        handle_left_pager.setOnDragListener(DragListener())
+        handle_right_pager.setOnDragListener(DragListener())
+        home_page.setOnDragListener(DragListener())
+
         setUpObserver()
     }
 

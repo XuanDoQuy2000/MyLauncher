@@ -17,7 +17,9 @@ import com.xuandq.mylauncher.utils.DragListener
 import java.util.*
 import kotlin.collections.ArrayList
 
-class AppAdapter(val context: Context, var list : ArrayList<Item>, val isDock: Boolean = false) : RecyclerView.Adapter<AppAdapter.AppViewHolder>() {
+class AppAdapter(val context: Context, var list : ArrayList<Item>, val isDock: Boolean = false)
+    : RecyclerView.Adapter<AppAdapter.AppViewHolder>(){
+
 
     private var itemClickListener : ((Int) -> Unit)? = null
 
@@ -47,8 +49,17 @@ class AppAdapter(val context: Context, var list : ArrayList<Item>, val isDock: B
         return list.size
     }
 
+
+
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
         val item = list[position]
+
+//        for (temp in list) {
+//            Log.d("aaalauncher", "onBindViewHolder: " + temp.label)
+//            Log.w("aaalauncher", "onBindViewHolder: " + holder.container.tag)
+//        }
+
+//        Log.w("aaalauncher", "--------------------------------------: " )
         if (item.type == Item.Type.APP) {
             holder.icon.setImageDrawable(item.icon)
         } else {
@@ -64,8 +75,9 @@ class AppAdapter(val context: Context, var list : ArrayList<Item>, val isDock: B
         }
 
         holder.container.setTag(position)
+        holder.setIsRecyclable(false)
         holder.container.setOnDragListener(DragListener())
-        Log.d("launcher", "onBindViewHolder: "+ holder.container.getTag())
+//        Log.d("aaalauncher", "onBindViewHolder: "+ holder.container.getTag())
 
         holder.container.setOnLongClickListener {
             it.visibility = View.INVISIBLE
@@ -79,6 +91,13 @@ class AppAdapter(val context: Context, var list : ArrayList<Item>, val isDock: B
         }
     }
 
+    fun logItem() {
+        for (temp in list) {
+            Log.d("anhhct", "logItem: " + temp.label)
+        }
+        Log.w("anhhct", "-----------------------------------------")
+    }
+
     fun updateData(newList : List<Item>){
         list = newList as ArrayList<Item>
         notifyDataSetChanged()
@@ -89,18 +108,6 @@ class AppAdapter(val context: Context, var list : ArrayList<Item>, val isDock: B
         notifyItemMoved(src,des)
     }
 
-    fun groupApp2App(src: Int, des: Int){
-        val srcItem = list[src]
-        val desItem = list[des]
-        val group = Item.newGroupItem()
-        group.items!!.add(srcItem)
-        group.items!!.add(desItem)
-
-        notifyItemRemoved(src)
-        notifyItemRemoved(des)
-        notifyItemInserted(des)
-
-    }
 
     fun removeItem(pos : Int){
         list.removeAt(pos)
