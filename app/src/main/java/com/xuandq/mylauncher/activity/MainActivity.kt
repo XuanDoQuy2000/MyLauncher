@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     val TAG = "homeactivity"
     private lateinit var appViewModel: AppViewModel
 
+    var groupFragment : GroupFragment? =null
+
     private lateinit var homeAdapter: HomePagerAdapter
     private var allListItem = ArrayList<ArrayList<Item>>()
     private var listPageApp = ArrayList<Fragment>()
@@ -150,15 +152,17 @@ class MainActivity : AppCompatActivity() {
 
     fun showDialogGroup(group : Item, itemPos : Int){
         dialog_group.removeAllViews()
-        val f = GroupFragment.newInstance(group,home_page.currentItem, itemPos)
+        val groupFragment = GroupFragment.newInstance(group,home_page.currentItem, itemPos)
         supportFragmentManager.beginTransaction()
-            .replace(R.id.dialog_group,f)
+            .replace(R.id.dialog_group,groupFragment)
             .commit()
         dialog_group.visibility = View.VISIBLE
     }
 
+    fun isShowDialogGroup() = dialog_group.visibility == View.VISIBLE
+
     fun hideDialogGroup(){
-        dialog_group.visibility = View.INVISIBLE
+        dialog_group.visibility = View.GONE
     }
 
     override fun onBackPressed() {

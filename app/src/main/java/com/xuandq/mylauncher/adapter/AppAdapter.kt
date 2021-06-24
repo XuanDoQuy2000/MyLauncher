@@ -141,6 +141,7 @@ class AppAdapter(
         holder.setIsRecyclable(false)
         holder.itemView.setOnDragListener(DragListener(context as MainActivity))
 
+
         holder.itemView.setOnLongClickListener {
             it.visibility = View.INVISIBLE
             val data = ClipData.newPlainText("", "")

@@ -42,11 +42,13 @@ public class DragListener implements View.OnDragListener {
     private final static int RIGHT = 96;
 
 
-
     @Override
     public boolean onDrag(View v, DragEvent event) {
 
         if (viewSource == null) viewSource = (View) event.getLocalState();
+
+        if (mainActivity.getGroupFragment() != null)
+            Log.d("bbb", "onDrag: " + mainActivity.getGroupFragment().getView().findViewById(R.id.bound_dialog).getId());
 
         if (v.getId() == R.id._app_container || v.getId() == R.id._group_container) {
             View shadow;
@@ -71,8 +73,10 @@ public class DragListener implements View.OnDragListener {
                             shadow.setVisibility(View.VISIBLE);
                             canGroup = true;
                         } else if (time >= 300) {
-                            swapItem(viewSource, v);
+
+                            swapItem(v);
                             shadow.setVisibility(View.INVISIBLE);
+
                             canGroup = false;
                         } else {
                             canGroup = false;
@@ -129,10 +133,11 @@ public class DragListener implements View.OnDragListener {
                                 final ArrayList<Item> listTarget = targetAdapter.getList();
 
                                 Item itemRemoved = listSource.remove((int) viewSource.getTag());
+                                sourceAdapter.notifyDataSetChanged();
 
-                                onChangeRecyclerView(cur - 1 , cur , listFragment, itemRemoved);
+                                onChangeRecyclerView(cur - 1, cur, listFragment, itemRemoved);
                             }
-                            firstTouchHandleLeft = System.currentTimeMillis()+200;
+                            firstTouchHandleLeft = System.currentTimeMillis() + 200;
                         }
                     }
                     return true;
@@ -166,7 +171,7 @@ public class DragListener implements View.OnDragListener {
 
 
                                 RecyclerView rvSource, rvTarget;
-                                AppAdapter sourceAdapter,targetAdapter;
+                                AppAdapter sourceAdapter, targetAdapter;
 
                                 rvSource = listFragment.get(cur).getView().findViewById(R.id.recyc_home_apps);
                                 rvTarget = listFragment.get(cur + 1).getView().findViewById(R.id.recyc_home_apps);
@@ -183,7 +188,7 @@ public class DragListener implements View.OnDragListener {
                                 onChangeRecyclerView(cur + 1, cur, listFragment, itemRemoved);
 
                             }
-                            firstTouchHandleRight = System.currentTimeMillis()+200;
+                            firstTouchHandleRight = System.currentTimeMillis() + 200;
                         }
                     }
                     return true;
@@ -194,20 +199,22 @@ public class DragListener implements View.OnDragListener {
                 case DragEvent.ACTION_DRAG_STARTED:
                     ViewPager2 viewPager2 = mainActivity.findViewById(R.id.home_page);
                     pageSource = viewPager2.getCurrentItem();
+                    pageTarget = -1;
                     return true;
                 case DragEvent.ACTION_DRAG_ENDED:
                     Tool.visibleViews(200, viewSource);
                     return true;
             }
-        } else if (v.getId() == R.id.bound_dialog) {
+        } else if (mainActivity.isShowDialogGroup() && v.getId() == R.id.bound_dialog) {
             switch (event.getAction()) {
                 case DragEvent.ACTION_DRAG_STARTED:
                     return true;
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    return true;
                 case DragEvent.ACTION_DRAG_EXITED:
-                    View parentView = (View) v.getParent();
-                    parentView.setVisibility(View.INVISIBLE);
-
-//                    onOutGroup(viewSource, v);
+                    Log.d("bbb", "onExit :::: ");
+                    mainActivity.hideDialogGroup();
+                    onOutGroup(viewSource, v);
 
                     return true;
             }
@@ -223,7 +230,7 @@ public class DragListener implements View.OnDragListener {
 
         ViewPager2 viewPager = mainActivity.findViewById(R.id.home_page);
         HomePagerAdapter pagerAdapter = (HomePagerAdapter) viewPager.getAdapter();
-        List<Fragment> listFragment = pagerAdapter.getList();
+        ArrayList<Fragment> listFragment = pagerAdapter.getList();
         RecyclerView rvSource = (RecyclerView) viewSource.getParent();
         RecyclerView rvTarget = listFragment.get(page).getView().findViewById(R.id.recyc_home_apps);
         AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
@@ -231,57 +238,22 @@ public class DragListener implements View.OnDragListener {
         ArrayList<Item> listSource = sourceAdapter.getList();
         ArrayList<Item> listTarget = targetAdapter.getList();
 
+        Item sourceRemoved = listSource.remove(posOfItem);
+        listTarget.get(posOfGroup).getItems().remove(sourceRemoved);
+        if (listTarget.get(posOfGroup).getItems().size() == 1) {
+            Item item = listTarget.get(posOfGroup).getItems().get(0);
+            listTarget.remove(posOfGroup);
+            listTarget.add(posOfGroup, item);
+        }
+        sourceAdapter.notifyDataSetChanged();
+        targetAdapter.notifyDataSetChanged();
+
+        pageSource = pageTarget = page;
+        onChangeRecyclerView(viewPager.getCurrentItem(), viewPager.getCurrentItem(), listFragment, sourceRemoved);
+
 
     }
 
-    private void onChangePage(int cur, ArrayList<Fragment> listFragment, int direction) {
-        final RecyclerView rvSource, rvTarget;
-        int nextCur = -1;
-
-        if (direction == LEFT) {
-            nextCur = cur - 1;
-            rvSource = listFragment.get(cur).getView().findViewById(R.id.recyc_home_apps);
-            rvTarget = listFragment.get(cur - 1).getView().findViewById(R.id.recyc_home_apps);
-        } else {
-            nextCur = cur + 1;
-            rvSource = listFragment.get(cur).getView().findViewById(R.id.recyc_home_apps);
-            rvTarget = listFragment.get(cur + 1).getView().findViewById(R.id.recyc_home_apps);
-        }
-        AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
-        AppAdapter targetAdapter = (AppAdapter) rvTarget.getAdapter();
-        ArrayList<Item> listSource = sourceAdapter.getList();
-        final ArrayList<Item> listTarget = targetAdapter.getList();
-
-        int posSource = (int) viewSource.getTag();
-
-        if (listTarget.size() < 20) {
-            Item itemRemoved = listSource.remove(posSource);
-            sourceAdapter.notifyDataSetChanged();
-            listTarget.add(listTarget.size(), itemRemoved);
-            targetAdapter.notifyDataSetChanged();
-            rvTarget.post(new Runnable() {
-                @Override
-                public void run() {
-                    viewSource = rvTarget.findViewWithTag(listTarget.size() - 1);
-                    Tool.invisibleViews(0, viewSource);
-                }
-            });
-        } else {
-            Item targetRemoved = listTarget.remove(listTarget.size() - 1);
-            Item sourceRemoved = listSource.remove(posSource);
-            listSource.add(posSource, targetRemoved);
-            sourceAdapter.notifyDataSetChanged();
-            listTarget.add(listTarget.size(), sourceRemoved);
-            targetAdapter.notifyDataSetChanged();
-            rvTarget.post(new Runnable() {
-                @Override
-                public void run() {
-                    viewSource = rvTarget.findViewWithTag(listTarget.size() - 1);
-                    Tool.invisibleViews(0, viewSource);
-                }
-            });
-        }
-    }
 
     private void onChangeRecyclerView(int curPage, int prevPage, ArrayList<Fragment> listFragment, Item sourceRemoved) {
         Item itemRemoved = sourceRemoved;
@@ -290,21 +262,24 @@ public class DragListener implements View.OnDragListener {
         boolean canbreak = false;
 
         final RecyclerView rvSource, rvTarget;
-        AppAdapter sourceAdapter,targetAdapter;
+        AppAdapter sourceAdapter, targetAdapter;
 
         rvSource = listFragment.get(prevPage).getView().findViewById(R.id.recyc_home_apps);
         rvTarget = listFragment.get(curPage).getView().findViewById(R.id.recyc_home_apps);
         sourceAdapter = (AppAdapter) rvSource.getAdapter();
         targetAdapter = (AppAdapter) rvTarget.getAdapter();
 
-        if (pageTarget - pageSource >= 2){
+        Log.d("bbb", "onChangeRecyclerView: " + pageSource);
+        Log.d("bbb", "onChangeRecyclerView: " + pageTarget);
+
+        if (pageTarget - pageSource >= 2) {
             ArrayList<Item> listSource = sourceAdapter.getList();
             ArrayList<Item> listTarget = targetAdapter.getList();
 
             Item temp = listTarget.remove(0);
-            listTarget.add(0,sourceRemoved);
+            listTarget.add(0, sourceRemoved);
             targetAdapter.notifyDataSetChanged();
-            listSource.add(listSource.size() - 1,temp);
+            listSource.add(listSource.size() - 1, temp);
             sourceAdapter.notifyDataSetChanged();
 
             rvTarget.post(new Runnable() {
@@ -318,7 +293,7 @@ public class DragListener implements View.OnDragListener {
             return;
         }
 
-        if (pageSource - pageTarget >= 2){
+        if (pageSource - pageTarget >= 2) {
             return;
         }
 
@@ -329,7 +304,9 @@ public class DragListener implements View.OnDragListener {
             if (listItem.size() == 20) {
                 if (i != listFragment.size() - 1) {
                     Item temp = listItem.remove(listItem.size() - 1);
+                    Log.d("bbb", "onChangeRecyclerView: remove" + temp.getLabel());
                     listItem.add(0, itemRemoved);
+                    Log.d("bbb", "onChangeRecyclerView: add" + itemRemoved.getLabel());
                     itemRemoved = temp;
                     adapter.notifyDataSetChanged();
                 } else {
@@ -342,12 +319,11 @@ public class DragListener implements View.OnDragListener {
             }
             if (first[0]) {
                 first[0] = false;
-                rv.post(new Runnable() {
+                rvTarget.post(new Runnable() {
                     @Override
                     public void run() {
-                        viewSource = rv.findViewWithTag(0);
+                        viewSource = rvTarget.findViewWithTag(0);
                         Tool.invisibleViews(0, viewSource);
-
                     }
                 });
 
@@ -393,10 +369,10 @@ public class DragListener implements View.OnDragListener {
         }
     }
 
-    private void swapItem(View viewSource, View v) {
-        Log.d("aaaleft", "swapItem: " + viewSource.getTag());
-        Log.d("aaaleft", "swapItem: " + v.getTag());
-        RecyclerView rvSource = (RecyclerView) viewSource.getParent();
+    private void swapItem(View v) {
+        Log.d("aaaswap", "swapItem: " + viewSource.getTag());
+        Log.d("aaaswap", "swapItem: " + v.getTag());
+        final RecyclerView rvSource = (RecyclerView) viewSource.getParent();
         RecyclerView rvTarget = (RecyclerView) v.getParent();
         positionSource = (int) viewSource.getTag();
         positionTarget = (int) v.getTag();
@@ -422,6 +398,25 @@ public class DragListener implements View.OnDragListener {
                         view2.setTag(i);
                     }
                 }
+
+                sourceAdapter.notifyDataSetChanged();
+                rvSource.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        viewSource = rvSource.findViewWithTag(positionTarget);
+                        Tool.invisibleViews(0, viewSource);
+                    }
+                });
+
+//
+//                rvSource.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        viewSource.setVisibility(View.INVISIBLE);
+//                    }
+//                });
+
+
             } else {
                 Log.d("aaa", "swapItem: rvSource != rvTarget");
             }

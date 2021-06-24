@@ -13,6 +13,7 @@ import com.xuandq.mylauncher.R
 import com.xuandq.mylauncher.activity.MainActivity
 import com.xuandq.mylauncher.adapter.AppAdapter
 import com.xuandq.mylauncher.model.Item
+import com.xuandq.mylauncher.utils.DragListener
 import com.xuandq.mylauncher.utils.Tool
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_group.*
@@ -59,6 +60,7 @@ class GroupFragment : Fragment() {
 
         bound_dialog.setTag(R.id.page, page)
         bound_dialog.setTag(R.id.group_position, groupPos)
+        bound_dialog.setOnDragListener(DragListener(requireActivity() as MainActivity))
         back_ground.setOnClickListener {
             (requireActivity() as MainActivity).hideDialogGroup()
         }
