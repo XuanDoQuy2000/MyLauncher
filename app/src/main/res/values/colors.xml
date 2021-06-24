@@ -25,6 +25,7 @@
     <color name="introText">#ff444444</color>
     <color name="introButton">#7d000000</color>
 
+    <color name="transparent70">#4DB5B5B5</color>
     <color name="transparent50">#7FFFFFFF</color>
-    <color name="transparent20">#CDD8D8D8</color>
+    <color name="transparent20">#E6D8D8D8</color>
 </resources>

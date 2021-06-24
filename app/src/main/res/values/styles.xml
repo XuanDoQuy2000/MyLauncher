@@ -23,4 +23,13 @@
         <item name="android:textColorSecondary">@color/Light.TextColorSecondary</item>
     </style>
 
+    <style name="MY.DIALOG" parent="Theme.AppCompat.Light.NoActionBar" >
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="android:padding">0dp</item>
+    </style>
+
 </resources>

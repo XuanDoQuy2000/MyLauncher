@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.xuandq.mylauncher.widget.ItemView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/_group_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/_container_group"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_container_icon"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/_group_icon"
+        app:layout_constraintDimensionRatio="1:1"
+
+        app:layout_constraintEnd_toEndOf="@id/_group_icon"
+        app:layout_constraintStart_toStartOf="@id/_group_icon"
+        app:layout_constraintTop_toTopOf="@id/_group_icon"
+        app:layout_constraintWidth_percent="0.76"
+
+        />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/_group_icon"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_group"
+        android:padding="4dp"
+        app:layout_constraintBottom_toTopOf="@id/_group_label"
+        app:layout_constraintDimensionRatio="1:1"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintWidth_percent="0.64"
+        />
+
+    <TextView
+        android:id="@+id/_group_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="Example"
+        android:textColor="@color/white"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        app:layout_constraintEnd_toEndOf="@id/_group_icon"
+        app:layout_constraintStart_toStartOf="@id/_group_icon"
+        app:layout_constraintTop_toBottomOf="@id/_group_icon"
+        app:layout_constraintWidth_percent="0.8" />
+
+</com.xuandq.mylauncher.widget.ItemView>

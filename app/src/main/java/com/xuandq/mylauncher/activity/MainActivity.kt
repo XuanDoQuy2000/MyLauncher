@@ -5,8 +5,10 @@ import android.graphics.drawable.Drawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -17,6 +19,7 @@ import com.xuandq.mylauncher.R
 import com.xuandq.mylauncher.adapter.AppAdapter
 import com.xuandq.mylauncher.adapter.HomePagerAdapter
 import com.xuandq.mylauncher.fragment.AppFragment
+import com.xuandq.mylauncher.fragment.GroupFragment
 import com.xuandq.mylauncher.model.Item
 import com.xuandq.mylauncher.utils.DragListener
 import com.xuandq.mylauncher.utils.Tool
@@ -46,30 +49,31 @@ class MainActivity : AppCompatActivity() {
 
     private fun initView() {
 
-        val wallpaperManager = WallpaperManager.getInstance(this)
-        val wallpaperDrawable = wallpaperManager.drawable
-        home_background.setImageDrawable(wallpaperDrawable)
-
         initViewPager()
         initDock()
 
-        handle_left_pager.setOnDragListener(DragListener())
-        handle_right_pager.setOnDragListener(DragListener())
-        home_page.setOnDragListener(DragListener())
+        handle_left_pager.setOnDragListener(DragListener(this))
+        handle_right_pager.setOnDragListener(DragListener(this))
+        home_page.setOnDragListener(DragListener(this))
 
         setUpObserver()
     }
 
+
     private fun initDock() {
+
+        val wallpaperManager = WallpaperManager.getInstance(this)
+        val wallpaperDrawable = wallpaperManager.drawable
+        val bitmap = wallpaperDrawable.toBitmap()
+
         val grid = GridLayoutManager(this, 4)
         home_dock_rv.layoutManager = grid
         dockAdapter = AppAdapter(this, listDock, true)
         home_dock_rv.adapter = dockAdapter
 
-        Log.d(TAG, "initDock: ${home_background.measuredWidth}")
 
         home_dock.viewTreeObserver.addOnGlobalLayoutListener {
-            val bitmap = Tool.createBackGroundView(this,home_background,home_dock)
+            val bitmap = Tool.createBackGroundView(this,bitmap,home_dock)
             var d : Drawable? = null
             if (bitmap != null) {
                 d = RoundedBitmapDrawableFactory.create(resources, bitmap)
@@ -143,4 +147,26 @@ class MainActivity : AppCompatActivity() {
 
         })
     }
+
+    fun showDialogGroup(group : Item, itemPos : Int){
+        dialog_group.removeAllViews()
+        val f = GroupFragment.newInstance(group,home_page.currentItem, itemPos)
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.dialog_group,f)
+            .commit()
+        dialog_group.visibility = View.VISIBLE
+    }
+
+    fun hideDialogGroup(){
+        dialog_group.visibility = View.INVISIBLE
+    }
+
+    override fun onBackPressed() {
+        if (dialog_group.isShown){
+            hideDialogGroup()
+        }else {
+            super.onBackPressed()
+        }
+    }
+
 }

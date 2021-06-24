@@ -224,9 +224,9 @@ public class Tool {
 
     public static Bitmap captureViewAndBlur(Context context, View view) {
         //Create a Bitmap with the same dimensions as the View
-        Bitmap image = Bitmap.createBitmap(view.getMeasuredWidth(),
-                view.getMeasuredHeight(),
-                Bitmap.Config.ARGB_4444); //reduce quality
+        view.setDrawingCacheEnabled(true);
+        Bitmap image = Bitmap.createBitmap(view.getDrawingCache());
+        view.setDrawingCacheEnabled(false);
         //Draw the view inside the Bitmap
         Canvas canvas = new Canvas(image);
         view.draw(canvas);
@@ -265,38 +265,47 @@ public class Tool {
         output.copyTo(bitmap2);
     }
 
+    public static Bitmap createBackGroundView(Context context, Bitmap wallpaper, View targetView){
+        Bitmap temp = wallpaper.copy(Bitmap.Config.ARGB_8888,true);
+        blurBitmapWithRenderscript(RenderScript.create(context), temp);
+        Canvas canvas = new Canvas(temp);
+        Paint paint = new Paint();
+        paint.setXfermode(
+                new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        ColorFilter filter =
+                new LightingColorFilter(0xFFCCCCCC, 0x00444444); // lighten
+//        ColorFilter filter =
+//           new LightingColorFilter(0xFF7F7F7F, 0x00000000); // darken
+        paint.setColorFilter(filter);
+        canvas.drawBitmap(temp, 0, 0, paint);
+        Matrix matrix = new Matrix();
+        //half the size of the cropped bitmap
+        //to increase performance, it will also
+        //increase the blur effect.
+        matrix.setScale(0.5f, 0.5f);
+        Bitmap bitmap = Bitmap.createBitmap(temp,
+                (int) targetView.getX(),
+                (int) targetView.getY(),
+                targetView.getMeasuredWidth(),
+                targetView.getMeasuredHeight(),
+                matrix,
+                true);
+        return bitmap;
+    }
+
     public static Bitmap createBackGroundView(Context context, View backgroundView, View targetView) {
         Bitmap blurredBitmap = captureViewAndBlur(context,backgroundView);
 
-        int[] loc = new int[2];
-        int[] bgLoc = new int[2];
-        backgroundView.getLocationInWindow(bgLoc);
-        targetView.getLocationInWindow(loc);
-        int height = targetView.getHeight();
-        int y = loc[1];
-        if (bgLoc[1] >= loc[1]) {
-            //view is going off the screen at the top
-            height -= (bgLoc[1] - loc[1]);
-            if (y < 0)
-                y = 0;
-        }
-        if (y + height > blurredBitmap.getHeight()) {
-            height = blurredBitmap.getHeight() - y;
-            if (height <= 0) {
-                //below the screen
-                return null;
-            }
-        }
         Matrix matrix = new Matrix();
         //half the size of the cropped bitmap
         //to increase performance, it will also
         //increase the blur effect.
         matrix.setScale(0.5f, 0.5f);
         Bitmap bitmap = Bitmap.createBitmap(blurredBitmap,
-                (int) targetView.getX()+30,
-                y-100,
-                targetView.getMeasuredWidth()-60,
-                height,
+                (int) targetView.getX(),
+                (int) targetView.getY(),
+                targetView.getMeasuredWidth(),
+                targetView.getMeasuredHeight(),
                 matrix,
                 true);
 

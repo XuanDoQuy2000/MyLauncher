@@ -7,8 +7,10 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import com.xuandq.mylauncher.R
+import com.xuandq.mylauncher.activity.MainActivity
 import com.xuandq.mylauncher.adapter.AppAdapter
 import com.xuandq.mylauncher.model.Item
 import com.xuandq.mylauncher.utils.DragListener
@@ -36,14 +38,19 @@ class AppFragment(var listItem : ArrayList<Item>) : Fragment() {
     private fun initView() {
         val grid = GridLayoutManager(requireActivity(), 4)
         recyc_home_apps.layoutManager = grid
-        appAdapter = AppAdapter(requireActivity(), listItem)
+        appAdapter = AppAdapter(requireActivity() as MainActivity, listItem)
         recyc_home_apps.adapter = appAdapter
         recyc_home_apps.itemAnimator?.changeDuration = 1000
-        recyc_home_apps.setOnDragListener(DragListener())
+        recyc_home_apps.setOnDragListener(DragListener(requireActivity() as MainActivity))
         Log.d("aaa", "initView: " + listItem.size)
         appAdapter.setItemClickListenner {
-            val intentLauncher = listItem[it].intent
-            startActivity(intentLauncher)
+            if (listItem[it].type == Item.Type.APP) {
+                val intentLauncher = listItem[it].intent
+                startActivity(intentLauncher)
+            }else{
+                val mainActivity = requireActivity() as MainActivity
+                mainActivity.showDialogGroup(listItem[it], it)
+            }
         }
     }
 
