@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xuandq.mylauncher.R
@@ -136,13 +137,13 @@ class AppAdapter(
             itemClickListener?.let { it.invoke(position) }
         }
 
-
         holder.itemView.setTag(position)
         holder.setIsRecyclable(false)
         holder.itemView.setOnDragListener(DragListener(context as MainActivity))
 
 
         holder.itemView.setOnLongClickListener {
+
             it.visibility = View.INVISIBLE
             val data = ClipData.newPlainText("", "")
             val shadowBuilder = View.DragShadowBuilder(it)
@@ -163,6 +164,13 @@ class AppAdapter(
     fun swapItem(src: Int, des: Int) {
         Collections.swap(list, src, des)
         notifyItemMoved(src, des)
+    }
+
+    class AnimatorX(val adapter: AppAdapter) : DefaultItemAnimator(){
+//        override fun onAnimationFinished(viewHolder: RecyclerView.ViewHolder) {
+//            adapter.notifyDataSetChanged()
+//            super.onAnimationFinished(viewHolder)
+//        }
     }
 
 

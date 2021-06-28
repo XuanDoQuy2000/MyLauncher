@@ -42,6 +42,7 @@ class AppFragment(var listItem : ArrayList<Item>) : Fragment() {
         recyc_home_apps.adapter = appAdapter
         recyc_home_apps.itemAnimator?.changeDuration = 1000
         recyc_home_apps.setOnDragListener(DragListener(requireActivity() as MainActivity))
+        recyc_home_apps.itemAnimator = AppAdapter.AnimatorX(appAdapter)
         Log.d("aaa", "initView: " + listItem.size)
         appAdapter.setItemClickListenner {
             if (listItem[it].type == Item.Type.APP) {

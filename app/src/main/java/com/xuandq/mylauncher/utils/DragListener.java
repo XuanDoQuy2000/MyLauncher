@@ -1,6 +1,9 @@
 package com.xuandq.mylauncher.utils;
 
+import android.content.ClipData;
 import android.content.Context;
+import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.View;
@@ -33,7 +36,9 @@ public class DragListener implements View.OnDragListener {
     static int positionSource = 0;
     static int pageSource = -1;
     static int pageTarget = -1;
-    boolean canGroup = false;
+    static boolean canGroup = false;
+    static boolean notified = false;
+    static boolean fromDock = false;
     long firstEntered = 0L;
     long firstTouchHandleLeft = 0L;
     long firstTouchHandleRight = 0L;
@@ -47,19 +52,20 @@ public class DragListener implements View.OnDragListener {
 
         if (viewSource == null) viewSource = (View) event.getLocalState();
 
-        if (mainActivity.getGroupFragment() != null)
-            Log.d("bbb", "onDrag: " + mainActivity.getGroupFragment().getView().findViewById(R.id.bound_dialog).getId());
 
         if (v.getId() == R.id._app_container || v.getId() == R.id._group_container) {
             View shadow;
             if (v.getId() == R.id._app_container) shadow = v.findViewById(R.id._container_icon);
             else shadow = v.findViewById(R.id._container_group);
+
+            Log.d("ccc", "onDrag action : " + event.getAction());
             switch (event.getAction()) {
                 case DragEvent.ACTION_DRAG_STARTED:
-                    viewSource = (View) event.getLocalState();
+                    Log.d("ddd", "onStart item: " + v.getTag());
                     return true;
 
                 case DragEvent.ACTION_DRAG_ENTERED:
+                    Log.d("ccc", "onEnter item: ");
                     if (v.getTag() != viewSource.getTag()) {
                         firstEntered = System.currentTimeMillis();
                     }
@@ -91,7 +97,13 @@ public class DragListener implements View.OnDragListener {
 
                 case DragEvent.ACTION_DROP:
                     shadow.setVisibility(View.INVISIBLE);
+
                     if (canGroup) {
+                        final RecyclerView rvSource = (RecyclerView) viewSource.getParent();
+                        AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
+                        sourceAdapter.notifyDataSetChanged();
+                        Tool.visibleViews(0, viewSource);
+
                         onGroup(viewSource, v);
                     }
                     return true;
@@ -110,6 +122,7 @@ public class DragListener implements View.OnDragListener {
                     if (time >= 800) {
                         View parent = (View) v.getParent();
                         Log.d("ahandle", "onDrag: " + parent.getId());
+
                         if (parent != null) {
                             ViewPager2 pager = parent.findViewById(R.id.home_page);
                             int cur = pager.getCurrentItem();
@@ -122,20 +135,21 @@ public class DragListener implements View.OnDragListener {
                                 pageTarget = cur - 1;
 
 //                                onChangePage(cur, listFragment, LEFT);
+                                if (!fromDock) {
+                                    final RecyclerView rvSource, rvTarget;
 
-                                final RecyclerView rvSource, rvTarget;
+                                    rvSource = listFragment.get(cur).getView().findViewById(R.id.recyc_home_apps);
+                                    rvTarget = listFragment.get(cur - 1).getView().findViewById(R.id.recyc_home_apps);
+                                    AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
+                                    AppAdapter targetAdapter = (AppAdapter) rvTarget.getAdapter();
+                                    ArrayList<Item> listSource = sourceAdapter.getList();
+                                    final ArrayList<Item> listTarget = targetAdapter.getList();
 
-                                rvSource = listFragment.get(cur).getView().findViewById(R.id.recyc_home_apps);
-                                rvTarget = listFragment.get(cur - 1).getView().findViewById(R.id.recyc_home_apps);
-                                AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
-                                AppAdapter targetAdapter = (AppAdapter) rvTarget.getAdapter();
-                                ArrayList<Item> listSource = sourceAdapter.getList();
-                                final ArrayList<Item> listTarget = targetAdapter.getList();
+                                    Item itemRemoved = listSource.remove((int) viewSource.getTag());
+                                    sourceAdapter.notifyDataSetChanged();
 
-                                Item itemRemoved = listSource.remove((int) viewSource.getTag());
-                                sourceAdapter.notifyDataSetChanged();
-
-                                onChangeRecyclerView(cur - 1, cur, listFragment, itemRemoved);
+                                    onChangeRecyclerView(cur - 1, cur, listFragment, itemRemoved);
+                                }
                             }
                             firstTouchHandleLeft = System.currentTimeMillis() + 200;
                         }
@@ -170,25 +184,29 @@ public class DragListener implements View.OnDragListener {
 //                                onChangePage(cur, listFragment, RIGHT);
 
 
-                                RecyclerView rvSource, rvTarget;
-                                AppAdapter sourceAdapter, targetAdapter;
+                                if (!fromDock) {
+                                    RecyclerView rvSource, rvTarget;
+                                    AppAdapter sourceAdapter, targetAdapter;
 
-                                rvSource = listFragment.get(cur).getView().findViewById(R.id.recyc_home_apps);
-                                rvTarget = listFragment.get(cur + 1).getView().findViewById(R.id.recyc_home_apps);
-                                sourceAdapter = (AppAdapter) rvSource.getAdapter();
-                                targetAdapter = (AppAdapter) rvTarget.getAdapter();
-                                ArrayList<Item> listSource = sourceAdapter.getList();
-                                ArrayList<Item> listTarget = targetAdapter.getList();
+                                    rvSource = listFragment.get(cur).getView().findViewById(R.id.recyc_home_apps);
+                                    rvTarget = listFragment.get(cur + 1).getView().findViewById(R.id.recyc_home_apps);
+                                    sourceAdapter = (AppAdapter) rvSource.getAdapter();
+                                    targetAdapter = (AppAdapter) rvTarget.getAdapter();
+                                    ArrayList<Item> listSource = sourceAdapter.getList();
+                                    ArrayList<Item> listTarget = targetAdapter.getList();
 
-                                positionSource = (int) viewSource.getTag();
+                                    positionSource = (int) viewSource.getTag();
 
-                                Item itemRemoved = listSource.remove(positionSource);
-                                sourceAdapter.notifyDataSetChanged();
+                                    Item itemRemoved = listSource.remove(positionSource);
+                                    sourceAdapter.notifyDataSetChanged();
 
-                                onChangeRecyclerView(cur + 1, cur, listFragment, itemRemoved);
+
+                                    onChangeRecyclerView(cur + 1, cur, listFragment, itemRemoved);
+                                }
 
                             }
                             firstTouchHandleRight = System.currentTimeMillis() + 200;
+
                         }
                     }
                     return true;
@@ -200,9 +218,22 @@ public class DragListener implements View.OnDragListener {
                     ViewPager2 viewPager2 = mainActivity.findViewById(R.id.home_page);
                     pageSource = viewPager2.getCurrentItem();
                     pageTarget = -1;
+                    notified = false;
+                    viewSource = (View) event.getLocalState();
+                    RecyclerView parent = (RecyclerView) viewSource.getParent();
+                    if (parent.getId() == R.id.home_dock_rv){
+                        fromDock = true;
+                    }else {
+                        fromDock = false;
+                    }
                     return true;
                 case DragEvent.ACTION_DRAG_ENDED:
-                    Tool.visibleViews(200, viewSource);
+                    if (!notified) {
+                        final RecyclerView rvSource = (RecyclerView) viewSource.getParent();
+                        AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
+                        sourceAdapter.notifyDataSetChanged();
+                        Tool.visibleViews(0, viewSource);
+                    }
                     return true;
             }
         } else if (mainActivity.isShowDialogGroup() && v.getId() == R.id.bound_dialog) {
@@ -212,21 +243,90 @@ public class DragListener implements View.OnDragListener {
                 case DragEvent.ACTION_DRAG_ENTERED:
                     return true;
                 case DragEvent.ACTION_DRAG_EXITED:
-                    Log.d("bbb", "onExit :::: ");
                     mainActivity.hideDialogGroup();
-                    onOutGroup(viewSource, v);
+                    onOutGroup(v);
+//                    ClipData data = ClipData.newPlainText("", "");
+//                    View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                        v.startDragAndDrop(data, shadowBuilder, v, 0);
+//                    } else {
+//                        v.startDrag(data, shadowBuilder, v, 0);
+//                    }
+                    return true;
+            }
+        } else if (mainActivity.isShowDialogGroup() && v.getId() == R.id.dialog__group_background) {
+            switch (event.getAction()) {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    return true;
+                case DragEvent.ACTION_DRAG_ENTERED:
 
+                    return true;
+            }
+        }else if (v.getId() == R.id.home_dock_rv){
+            switch (event.getAction()){
+                case DragEvent.ACTION_DRAG_STARTED:
+                    return true;
+                case DragEvent.ACTION_DROP:
+                    RecyclerView rvSource = (RecyclerView) viewSource.getParent();
+                    RecyclerView rvTarget = (RecyclerView) v;
+                    AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
+                    AppAdapter targetAdapter = (AppAdapter) rvTarget.getAdapter();
+                    ArrayList<Item> listSource = sourceAdapter.getList();
+                    ArrayList<Item> listTarget = targetAdapter.getList();
+                    Log.d("ddd", "onDrop: ");
+
+                    if (listTarget.size()<4){
+                        Item item = listSource.remove((int) viewSource.getTag());
+                        listTarget.add(listTarget.size(),item);
+                        sourceAdapter.notifyDataSetChanged();
+                        targetAdapter.notifyDataSetChanged();
+                        notified = true;
+                    }
+
+                    return true;
+            }
+        }else if (v.getId() == R.id.recyc_home_apps){
+            switch (event.getAction()){
+                case DragEvent.ACTION_DRAG_STARTED:
+                    return true;
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    return true;
+                case DragEvent.ACTION_DROP:
+                    if (fromDock){
+                        positionSource = (int) viewSource.getTag();
+                        ViewPager2 viewPager = mainActivity.findViewById(R.id.home_page);
+                        HomePagerAdapter pagerAdapter = (HomePagerAdapter) viewPager.getAdapter();
+                        int curPage = viewPager.getCurrentItem();
+                        ArrayList<Fragment> listFragment = pagerAdapter.getList();
+                        RecyclerView rvSource = (RecyclerView) viewSource.getParent();
+                        RecyclerView rvTarget = (RecyclerView) v;
+                        AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
+                        AppAdapter targetAdapter = (AppAdapter) rvTarget.getAdapter();
+                        ArrayList<Item> listSource = sourceAdapter.getList();
+                        ArrayList<Item> listTarget = targetAdapter.getList();
+
+                        if (listTarget.size() < 20){
+                            Item sourceRemoved = listSource.remove(positionSource);
+                            listTarget.add(listTarget.size(), sourceRemoved);
+                            sourceAdapter.notifyDataSetChanged();
+                            targetAdapter.notifyDataSetChanged();
+                        }
+                        notified = true;
+
+                    }
                     return true;
             }
         }
 
-        return false;
+        return true;
     }
 
-    private void onOutGroup(View viewSource, View v) {
+    private void onOutGroup(View v) {
         int page = (int) v.getTag(R.id.page);
         int posOfGroup = (int) v.getTag(R.id.group_position);
         int posOfItem = (int) viewSource.getTag();
+        Log.d("bbb", "onOutGroup: posOfItem" + posOfItem);
+        Log.d("bbb", "onOutGroup: posOfGroup" + posOfGroup);
 
         ViewPager2 viewPager = mainActivity.findViewById(R.id.home_page);
         HomePagerAdapter pagerAdapter = (HomePagerAdapter) viewPager.getAdapter();
@@ -242,15 +342,17 @@ public class DragListener implements View.OnDragListener {
         listTarget.get(posOfGroup).getItems().remove(sourceRemoved);
         if (listTarget.get(posOfGroup).getItems().size() == 1) {
             Item item = listTarget.get(posOfGroup).getItems().get(0);
+            listSource.clear();
             listTarget.remove(posOfGroup);
             listTarget.add(posOfGroup, item);
         }
+
         sourceAdapter.notifyDataSetChanged();
         targetAdapter.notifyDataSetChanged();
 
         pageSource = pageTarget = page;
-        onChangeRecyclerView(viewPager.getCurrentItem(), viewPager.getCurrentItem(), listFragment, sourceRemoved);
 
+        onChangeRecyclerView(viewPager.getCurrentItem(), viewPager.getCurrentItem(), listFragment, sourceRemoved);
 
     }
 
@@ -324,9 +426,9 @@ public class DragListener implements View.OnDragListener {
                     public void run() {
                         viewSource = rvTarget.findViewWithTag(0);
                         Tool.invisibleViews(0, viewSource);
+                        Log.d("bbb", "onExit: " + viewSource.getTag());
                     }
                 });
-
             }
             if (canbreak) break;
         }
@@ -340,20 +442,23 @@ public class DragListener implements View.OnDragListener {
         positionTarget = (int) v.getTag();
 
         if (rvTarget != null) {
+            AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
+            AppAdapter targetAdapter = (AppAdapter) rvTarget.getAdapter();
+            ArrayList<Item> listItemSource = sourceAdapter.getList();
+            ArrayList<Item> listItemTarget = targetAdapter.getList();
+            Item itemTarget = listItemTarget.get(positionTarget);
+            Item itemSource = listItemSource.get(positionSource);
             if (rvSource == rvTarget) {
-                AppAdapter sourceAdapter = (AppAdapter) rvSource.getAdapter();
-                List<Item> listItemSource = sourceAdapter.getList();
-                Item itemTarget = listItemSource.get(positionTarget);
-                Item itemSource = listItemSource.get(positionSource);
-
                 if (itemSource.getType() == Item.Type.APP &&
                         itemTarget.getType() == Item.Type.APP &&
                         rvSource.getId() != R.id.recyc_dialog) {
                     listItemSource.remove(positionTarget);
+
                     Item newGroup = Item.Companion.newGroupItem();
                     newGroup.getItems().add(itemSource);
                     newGroup.getItems().add(itemTarget);
                     listItemSource.add(positionTarget, newGroup);
+
                     listItemSource.remove(positionSource);
                     sourceAdapter.notifyDataSetChanged();
                 }
@@ -365,7 +470,34 @@ public class DragListener implements View.OnDragListener {
                         sourceAdapter.notifyDataSetChanged();
                     }
                 }
+            } else{
+                if (itemSource.getType() == Item.Type.APP &&
+                        itemTarget.getType() == Item.Type.APP &&
+                        rvSource.getId() != R.id.recyc_dialog) {
+                    listItemTarget.remove(positionTarget);
+
+                    Item newGroup = Item.Companion.newGroupItem();
+                    newGroup.getItems().add(itemSource);
+                    newGroup.getItems().add(itemTarget);
+                    listItemTarget.add(positionTarget, newGroup);
+                    targetAdapter.notifyDataSetChanged();
+
+                    listItemSource.remove(positionSource);
+                    sourceAdapter.notifyDataSetChanged();
+                }
+
+                if (itemSource.getType() == Item.Type.APP && itemTarget.getType() == Item.Type.GROUP) {
+                    if (itemTarget.getItems().size() < 9) {
+                        listItemSource.remove(positionSource);
+                        itemTarget.getItems().add(itemSource);
+                        sourceAdapter.notifyDataSetChanged();
+                        targetAdapter.notifyDataSetChanged();
+                    }
+                }
             }
+
+            notified = true;
+
         }
     }
 
@@ -399,31 +531,15 @@ public class DragListener implements View.OnDragListener {
                     }
                 }
 
-                sourceAdapter.notifyDataSetChanged();
-                rvSource.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        viewSource = rvSource.findViewWithTag(positionTarget);
-                        Tool.invisibleViews(0, viewSource);
-                    }
-                });
-
-//
-//                rvSource.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        viewSource.setVisibility(View.INVISIBLE);
-//                    }
-//                });
-
 
             } else {
-                Log.d("aaa", "swapItem: rvSource != rvTarget");
+
             }
         } else {
             Log.d("aaa", "swapItem: rvTarget null");
         }
     }
+
 
 
 }

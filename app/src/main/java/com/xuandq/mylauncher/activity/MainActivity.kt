@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.core.graphics.drawable.toBitmap
@@ -19,12 +20,13 @@ import com.xuandq.mylauncher.R
 import com.xuandq.mylauncher.adapter.AppAdapter
 import com.xuandq.mylauncher.adapter.HomePagerAdapter
 import com.xuandq.mylauncher.fragment.AppFragment
-import com.xuandq.mylauncher.fragment.GroupFragment
+//import com.xuandq.mylauncher.fragment.GroupFragment
 import com.xuandq.mylauncher.model.Item
 import com.xuandq.mylauncher.utils.DragListener
 import com.xuandq.mylauncher.utils.Tool
 import com.xuandq.mylauncher.viewmodel.AppViewModel
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_group.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     val TAG = "homeactivity"
     private lateinit var appViewModel: AppViewModel
 
-    var groupFragment : GroupFragment? =null
+//    var groupFragment : GroupFragment? =null
 
     private lateinit var homeAdapter: HomePagerAdapter
     private var allListItem = ArrayList<ArrayList<Item>>()
@@ -40,6 +42,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dockAdapter: AppAdapter
     private var listDock = ArrayList<Item>()
     private var currentPage = 0
+
+    var inGroup = false
+
+    private lateinit var groupAppAdapter : AppAdapter
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,12 +59,38 @@ class MainActivity : AppCompatActivity() {
 
         initViewPager()
         initDock()
+        setUpObserver()
 
         handle_left_pager.setOnDragListener(DragListener(this))
         handle_right_pager.setOnDragListener(DragListener(this))
         home_page.setOnDragListener(DragListener(this))
+        dialog_group.setOnDragListener(DragListener(this))
+        home.setOnDragListener(DragListener(this))
+        home_dock_rv.setOnDragListener(DragListener(this))
+    }
 
-        setUpObserver()
+    private fun initDialog(itemGroup : Item, page: Int, groupPos : Int) {
+
+        val recyc_dialog = dialog_group.findViewById<RecyclerView>(R.id.recyc_dialog)
+        val bound_dialog = dialog_group.findViewById<ConstraintLayout>(R.id.bound_dialog)
+        val dialog_background = dialog_group.findViewById<ConstraintLayout>(R.id.dialog__group_background)
+
+        val gridManager = GridLayoutManager(this,3)
+        recyc_dialog.layoutManager = gridManager
+        groupAppAdapter = AppAdapter(this, itemGroup?.items!!, false, 3)
+        recyc_dialog.adapter = groupAppAdapter
+
+        groupAppAdapter.setItemClickListenner {
+            val intent = itemGroup?.items!!.get(it).intent
+            startActivity(intent)
+        }
+
+        bound_dialog.setTag(R.id.page, page)
+        bound_dialog.setTag(R.id.group_position, groupPos)
+        bound_dialog.setOnDragListener(DragListener(this))
+        dialog_group.setOnClickListener {
+            hideDialogGroup()
+        }
     }
 
 
@@ -151,19 +183,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showDialogGroup(group : Item, itemPos : Int){
-        dialog_group.removeAllViews()
-        val groupFragment = GroupFragment.newInstance(group,home_page.currentItem, itemPos)
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.dialog_group,groupFragment)
-            .commit()
+//        dialog_group.removeAllViews()
+//        groupFragment = GroupFragment.newInstance(group,home_page.currentItem, itemPos)
+//        supportFragmentManager.beginTransaction()
+//            .replace(R.id.dialog_group, groupFragment!!)
+//            .commit()
+//        dialog_group.visibility = View.VISIBLE
+        initDialog(group , home_page.currentItem, itemPos)
         dialog_group.visibility = View.VISIBLE
     }
 
     fun isShowDialogGroup() = dialog_group.visibility == View.VISIBLE
 
+    fun visibleDialog(){
+        dialog_group.visibility = View.VISIBLE
+    }
+
     fun hideDialogGroup(){
         dialog_group.visibility = View.GONE
     }
+
 
     override fun onBackPressed() {
         if (dialog_group.isShown){
