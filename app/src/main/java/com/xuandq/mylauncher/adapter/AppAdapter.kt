@@ -3,6 +3,7 @@ package com.xuandq.mylauncher.adapter
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,10 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.drawable.RoundedBitmapDrawable
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,7 +31,8 @@ class AppAdapter(
     val context: Context,
     var list: ArrayList<Item>,
     val isDock: Boolean = false,
-    val numRow: Int = 5
+    val numRow: Int = 5,
+    val parentHeight : Int
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -105,7 +111,36 @@ class AppAdapter(
         var myHolder: RecyclerView.ViewHolder? = null
         if (holder.itemViewType == APP) {
             myHolder = holder as AppViewHolder
-            myHolder.icon.setImageDrawable(item.icon)
+
+            if (item.packageName!!.contains("setting")){
+                myHolder.icon.setImageResource(R.drawable.ios_setting)
+            }else if (item.packageName!!.contains("clock")){
+                myHolder.icon.setImageResource(R.drawable.ios_clock)
+            }else if (item.packageName!!.contains("camera")){
+                myHolder.icon.setImageResource(R.drawable.ios_camera)
+            }else if (item.packageName!!.contains("calendar")){
+                myHolder.icon.setImageResource(R.drawable.ios_calendar)
+            }
+            else if (item.packageName!!.contains("vending")){
+                myHolder.icon.setImageResource(R.drawable.ios_app_store)
+            }
+            else if (item.packageName!!.contains("contact")){
+                myHolder.icon.setImageResource(R.drawable.ios_contacts)
+            }
+            else if (item.packageName!!.contains("sms")){
+                myHolder.icon.setImageResource(R.drawable.ios_message)
+            }
+            else{
+                holder.icon.setPadding(14,14,14,14)
+                (myHolder as AppViewHolder).icon.scaleType = ImageView.ScaleType.FIT_XY
+                val width = item.icon!!.intrinsicWidth
+                val height = item.icon!!.intrinsicHeight
+
+                (myHolder as AppViewHolder).icon.setImageBitmap(item.icon!!.toBitmap(width,
+                    height, Bitmap.Config.ARGB_8888))
+
+            }
+
             if (!isDock) {
                 myHolder.label.setText(item.label)
             } else {
@@ -148,10 +183,11 @@ class AppAdapter(
             val data = ClipData.newPlainText("", "")
             val shadowBuilder = View.DragShadowBuilder(it)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                it.startDragAndDrop(data, shadowBuilder, it, 0)
+                it.startDragAndDrop(data, shadowBuilder, it, View.DRAG_FLAG_GLOBAL)
             } else {
-                it.startDrag(data, shadowBuilder, it, 0)
+                it.startDrag(data, shadowBuilder, it, View.DRAG_FLAG_GLOBAL)
             }
+
         }
     }
 

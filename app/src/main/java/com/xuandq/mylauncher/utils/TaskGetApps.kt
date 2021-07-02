@@ -28,6 +28,7 @@ abstract class TaskGetApps(val context: Context) : AsyncTask<Any, Any, List<App>
                     app.userHandle = userHandle
                     nonFilteredAppsTemp!!.add(app)
                 }
+                Log.d(TAG, "doInBackground: "+apps.size)
             }
         } else {
             val intent = Intent(Intent.ACTION_MAIN, null)

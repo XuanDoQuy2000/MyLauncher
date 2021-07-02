@@ -4,25 +4,31 @@ import android.content.ComponentName
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Parcelable
+
 import com.xuandq.mylauncher.utils.Definitions
 import com.xuandq.mylauncher.utils.Tool
 import kotlinx.android.parcel.Parcelize
+import java.io.Serializable
 import java.util.*
 
 @Parcelize
-class Item : Parcelable{
+class Item : Parcelable, Serializable{
     // all items need these values
     var icon: Drawable? = null
+
     var label: String
     var type: Type? = null
+
     var id: Int
+
     var _location: Definitions.ItemPosition? = null
-    var x = 0
-    var y = 0
+
     var positionInPage = -1
+    var packageName : String = ""
+    var iconPath : String = ""
 
     // intent for shortcuts and apps
-    var intent: Intent? = null
+    var intent: String = ""
 
     // list of items for groups
     var items: ArrayList<Item>? = null
@@ -43,6 +49,22 @@ class Item : Parcelable{
         }
     }
 
+    fun copy() : Item{
+        val item = Item()
+        item.id = this.id
+        item.label = this.label
+        item.intent = this.intent
+        item.items = this.items
+        item.packageName = this.packageName
+        item.type = this.type
+        item.spanX = this.spanX
+        item.spanY = this.spanX
+        item.iconPath = this.iconPath
+        item.widgetValue = this.widgetValue
+        item.actionValue = this.actionValue
+        return item
+    }
+
     fun reset() {
         val random = Random()
         id = random.nextInt()
@@ -53,14 +75,14 @@ class Item : Parcelable{
     }
 
 
-
     companion object {
         fun newAppItem(app: App): Item {
             val item = Item()
             item.type = Type.APP
             item.label = app.label
             item.icon = app.icon
-            item.intent = Tool.getIntentFromApp(app)
+            item.intent = Tool.getIntentAsString(Tool.getIntentFromApp(app))
+            item.packageName = app.packageName
             return item
         }
 

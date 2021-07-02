@@ -17,6 +17,8 @@
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
     <color name="shade">#B0000000</color>
+    <color name="gray">#454545</color>
+    <color name="grey225">#E1E1E1</color>
 
     <color name="materialRed">#d6552e</color>
     <color name="materialGreen">#b4c64a</color>
@@ -25,7 +27,7 @@
     <color name="introText">#ff444444</color>
     <color name="introButton">#7d000000</color>
 
-    <color name="transparent70">#4DB5B5B5</color>
+    <color name="transparent60">#66B5B5B5</color>
     <color name="transparent50">#7FFFFFFF</color>
     <color name="transparent20">#E6D8D8D8</color>
 </resources>

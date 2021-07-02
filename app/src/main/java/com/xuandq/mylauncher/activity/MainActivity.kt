@@ -2,8 +2,10 @@ package com.xuandq.mylauncher.activity
 
 import android.app.WallpaperManager
 import android.graphics.drawable.Drawable
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -22,11 +24,15 @@ import com.xuandq.mylauncher.adapter.HomePagerAdapter
 import com.xuandq.mylauncher.fragment.AppFragment
 //import com.xuandq.mylauncher.fragment.GroupFragment
 import com.xuandq.mylauncher.model.Item
+import com.xuandq.mylauncher.utils.AppRepository
+import com.xuandq.mylauncher.utils.AppSetting
 import com.xuandq.mylauncher.utils.DragListener
 import com.xuandq.mylauncher.utils.Tool
 import com.xuandq.mylauncher.viewmodel.AppViewModel
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.dialog_loading.*
 import kotlinx.android.synthetic.main.fragment_group.*
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,14 +58,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        AppSetting.init(this)
+
         initView()
+
+        showLoadingDialog()
+        AppRepository.getInstance().getAllListItem(this){listDock,listPage ->
+            dockAdapter.updateData(listDock)
+            homeAdapter.updateListTabs(listPage)
+            home_indicator.count = listPage.size
+            dialog_loading.visibility = View.GONE
+        }
+
+
     }
+
 
     private fun initView() {
 
         initViewPager()
         initDock()
-        setUpObserver()
+//        setUpObserver()
 
         handle_left_pager.setOnDragListener(DragListener(this))
         handle_right_pager.setOnDragListener(DragListener(this))
@@ -77,11 +96,11 @@ class MainActivity : AppCompatActivity() {
 
         val gridManager = GridLayoutManager(this,3)
         recyc_dialog.layoutManager = gridManager
-        groupAppAdapter = AppAdapter(this, itemGroup?.items!!, false, 3)
+        groupAppAdapter = AppAdapter(this, itemGroup?.items!!, false, 3, recyc_dialog.measuredHeight)
         recyc_dialog.adapter = groupAppAdapter
 
         groupAppAdapter.setItemClickListenner {
-            val intent = itemGroup?.items!!.get(it).intent
+            val intent = Tool.getIntentFromString(itemGroup?.items!!.get(it).intent)
             startActivity(intent)
         }
 
@@ -96,14 +115,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun initDock() {
 
+
         val wallpaperManager = WallpaperManager.getInstance(this)
         val wallpaperDrawable = wallpaperManager.drawable
         val bitmap = wallpaperDrawable.toBitmap()
 
         val grid = GridLayoutManager(this, 4)
         home_dock_rv.layoutManager = grid
-        dockAdapter = AppAdapter(this, listDock, true)
+        dockAdapter = AppAdapter(this, listDock, true, parentHeight = 0)
         home_dock_rv.adapter = dockAdapter
+        dockAdapter.setItemClickListenner {
+            val intent = Tool.getIntentFromString(dockAdapter.list[it].intent)
+            startActivity(intent)
+        }
 
 
         home_dock.viewTreeObserver.addOnGlobalLayoutListener {
@@ -211,5 +235,24 @@ class MainActivity : AppCompatActivity() {
             super.onBackPressed()
         }
     }
+
+    override fun onStop() {
+        listPageApp = homeAdapter.list
+        allListItem.clear()
+        listPageApp.forEach {
+            allListItem.add((it as AppFragment).appAdapter.list)
+        }
+        AppRepository.getInstance().saveAllListItem(this,allListItem)
+        AppRepository.getInstance().saveListDock(this, dockAdapter.list)
+        super.onStop()
+    }
+
+    fun showLoadingDialog(){
+        dialog_loading.visibility = View.VISIBLE
+        pb_main_loading.max = 100
+        pb_main_loading.progress = 80
+        pb_main_loading.isIndeterminate =true
+    }
+
 
 }

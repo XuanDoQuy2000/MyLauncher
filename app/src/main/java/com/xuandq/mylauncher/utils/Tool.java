@@ -191,25 +191,6 @@ public class Tool {
         return intent;
     }
 
-    public static Drawable getIcon(Context context, String filename) {
-        Bitmap bitmap = BitmapFactory.decodeFile(context.getFilesDir() + "/icons/" + filename + ".png");
-        if (bitmap != null) return new BitmapDrawable(context.getResources(), bitmap);
-        return null;
-    }
-
-    public static void saveIcon(Context context, Bitmap icon, String filename) {
-        File directory = new File(context.getFilesDir() + "/icons/");
-        if (!directory.exists()) directory.mkdir();
-        File file = new File(directory + filename + ".png");
-        try {
-            file.createNewFile();
-            FileOutputStream out = new FileOutputStream(file);
-            icon.compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void removeIcon(Context context, String filename) {
         File file = new File(context.getFilesDir() + "/icons/" + filename + ".png");

@@ -13,13 +13,16 @@ import com.xuandq.mylauncher.R
 import com.xuandq.mylauncher.activity.MainActivity
 import com.xuandq.mylauncher.adapter.AppAdapter
 import com.xuandq.mylauncher.model.Item
+import com.xuandq.mylauncher.utils.AppSetting
 import com.xuandq.mylauncher.utils.DragListener
+import com.xuandq.mylauncher.utils.Tool
 import kotlinx.android.synthetic.main.fragment_app.*
+import java.lang.RuntimeException
 
 
 class AppFragment(var listItem : ArrayList<Item>) : Fragment() {
 
-    private lateinit var appAdapter: AppAdapter
+    lateinit var appAdapter: AppAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,7 +41,12 @@ class AppFragment(var listItem : ArrayList<Item>) : Fragment() {
     private fun initView() {
         val grid = GridLayoutManager(requireActivity(), 4)
         recyc_home_apps.layoutManager = grid
-        appAdapter = AppAdapter(requireActivity() as MainActivity, listItem)
+        appAdapter = AppAdapter(
+            requireActivity() as MainActivity,
+            listItem ,
+            false, AppSetting.numRow,
+            recyc_home_apps.measuredHeight
+        )
         recyc_home_apps.adapter = appAdapter
         recyc_home_apps.itemAnimator?.changeDuration = 1000
         recyc_home_apps.setOnDragListener(DragListener(requireActivity() as MainActivity))
@@ -46,7 +54,7 @@ class AppFragment(var listItem : ArrayList<Item>) : Fragment() {
         Log.d("aaa", "initView: " + listItem.size)
         appAdapter.setItemClickListenner {
             if (listItem[it].type == Item.Type.APP) {
-                val intentLauncher = listItem[it].intent
+                val intentLauncher = Tool.getIntentFromString(listItem[it].intent)
                 startActivity(intentLauncher)
             }else{
                 val mainActivity = requireActivity() as MainActivity

@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
 import android.os.UserHandle
+import android.util.DisplayMetrics
+import android.util.Log
 
 class App {
     var icon: Drawable
@@ -17,6 +19,7 @@ class App {
 
     constructor(pm: PackageManager, info: ResolveInfo) {
         icon = info.loadIcon(pm)
+
         label = info.loadLabel(pm).toString()
         packageName = info.activityInfo.packageName
         className = info.activityInfo.name
@@ -25,6 +28,7 @@ class App {
     @SuppressLint("NewApi")
     constructor(pm: PackageManager, info: LauncherActivityInfo) {
         icon = info.getIcon(0)
+//        Log.d("vanh", "api: ${info.getBadgedIcon(0)}")
         label = info.label.toString()
         packageName = info.componentName.packageName
         className = info.name
